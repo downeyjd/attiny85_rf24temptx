@@ -1,0 +1,22 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "deploy",
+            "type": "shell",
+            "group": "build",
+            "command": "C:/users/jason/avrdude.exe",
+            "args": ["-cusbtiny", "-pattiny85", "-Uflash:w:${fileBasenameNoExtension}.hex:i"]
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "group": "build",
+            "command": "C:/Users/Jason/Documents/Arduino/sketchbook/avrbuildscript.bat",
+            "args": ["${fileBasename}"]
+        },
+        
+    ]
+}
