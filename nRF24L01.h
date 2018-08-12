@@ -149,10 +149,13 @@ void mirf_CSN_lo()
 void mirf_config_register(uint8_t reg, uint8_t value)
 // Clocks only one byte into the given MiRF register
 {
+    mirf_CSN_hi();
+    _delay_us(1);
     mirf_CSN_lo();
     spi_out(W_REGISTER | (REGISTER_MASK & reg));
     spi_out(value);
     mirf_CSN_hi();
+    _delay_us(1);
 };
 
 

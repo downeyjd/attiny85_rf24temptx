@@ -79,14 +79,17 @@ void spi_out(uint8_t dataout)
 {
     sbi (SPI_DDR, SPI_MOMI);        // output mode
     uint8_t bits = 8;
-    
+    SPI_PORT |= _BV(SPI_SCK);
+
     do{
         if (dataout & 0x80) SPI_PIN = (1<<SPI_MOMI);
-        SPI_PIN = (1<<SPI_SCK);
-        SPI_PIN = (1<<SPI_SCK);         // toggle SCK
+        SPI_PORT &= ~_BV(SPI_SCK);      // set clock low, clocks out a bit
+        _delay_us(1);
+        SPI_PORT |= _BV(SPI_SCK);      // set clock high
         cbi (SPI_PORT, SPI_MOMI);
         dataout <<= 1;                     
     }while(--bits);
 
+    SPI_PORT &= ~_BV(SPI_SCK);
     cbi (SPI_DDR, SPI_MOMI);        // input mode
 };
