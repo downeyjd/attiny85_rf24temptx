@@ -27,38 +27,48 @@
 
 static uint8_t buf[] = {0xde, 0xad, 0x01};
 
+void tx_byte(uint8_t outbyte)
+{
+    uint8_t bits = 8;
+    while (bits > 0)
+    {
+        //SPI_PORT &= ~_BV(SPI_SCK);  // set clock low
+        if (outbyte & 0x80) SPI_PORT |= _BV(SPI_MOMI); // to data buffer, write a 1 (if true) or leave it 0
+        SPI_PORT |= _BV(SPI_SCK);   // set clock high
+        _delay_us(25);
+        SPI_PORT &= ~_BV(SPI_SCK);  // set clock low, clocking out bit
+        SPI_PORT &= ~_BV(SPI_MOMI); // clear data buffer
+        outbyte <<= 1;
+        bits--;
+        _delay_us(79);
+    };
+};
+
 int main()
 {
-    uint8_t dataout, bits, buflen;
-    buflen = sizeof(buf);
-    // uint8_t testdata = 0x69;
-
     SPI_PORT &= ~(_BV(SPI_SCK) | _BV(SPI_MOMI | _BV(LED_PIN)));  // set SCK and MOMI and LED low so it starts low
     SPI_DDR = (_BV(SPI_SCK) | _BV(SPI_MOMI) | _BV(LED_PIN));    // set SCK and MOMI and LED to output, everything else to input
     _delay_us(500);
 
     while(1)
     {// set clock low + write to PORT, set clock high, wait, repeat
+        uint8_t dataout, buflen;
+        uint16_t buf_checksum = 0;
+        buflen = sizeof(buf);
+
         SPI_PORT |= _BV(LED_PIN);   //turn on LED
+
         for(; buflen > 0; buflen--)
         {
             dataout = buf[buflen - 1];
-            bits = 8;
-            while (bits > 1)
-            {
-                //SPI_PORT &= ~_BV(SPI_SCK);  // set clock low
-                if (dataout & 0x80) SPI_PORT |= _BV(SPI_MOMI); // to data buffer, write a 1 (if true) or leave it 0
-                SPI_PORT |= _BV(SPI_SCK);   // set clock high
-                _delay_us(47);
-                SPI_PORT &= ~_BV(SPI_SCK);  // set clock low, clocking out bit
-                SPI_PORT &= ~_BV(SPI_MOMI); // clear data buffer
-                dataout <<= 1;
-                bits--;
-                _delay_us(52);
-            };
+            buf_checksum += dataout;
+            tx_byte(dataout);
         };
+        tx_byte(buf_checksum >> 8);
+        tx_byte(buf_checksum & 0xFF);
+
         SPI_PORT &= ~_BV(LED_PIN);
-        _delay_ms(1000);
+        //_delay_ms(1000);
     };
     return 0;
 };
